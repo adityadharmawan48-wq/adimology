@@ -40,3 +40,33 @@ export async function saveStockQuery(data: {
 
   return result;
 }
+
+/**
+ * Get session value by key
+ */
+export async function getSessionValue(key: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('session')
+    .select('value')
+    .eq('key', key)
+    .single();
+
+  if (error || !data) return null;
+  return data.value;
+}
+
+/**
+ * Upsert session value
+ */
+export async function upsertSession(key: string, value: string) {
+  const { data, error } = await supabase
+    .from('session')
+    .upsert(
+      { key, value, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    )
+    .select();
+
+  if (error) throw error;
+  return data;
+}

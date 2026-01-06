@@ -1,26 +1,51 @@
 import type { MarketDetectorResponse, OrderbookResponse, BrokerData, WatchlistResponse } from './types';
+import { getSessionValue } from './supabase';
 
 const STOCKBIT_BASE_URL = 'https://exodus.stockbit.com';
 const STOCKBIT_AUTH_URL = 'https://stockbit.com';
 
+// Cache token to reduce database calls
+let cachedToken: string | null = null;
+let tokenLastFetched: number = 0;
+const TOKEN_CACHE_DURATION = 60000; // 1 minute
+
 /**
- * Get JWT token from environment
+ * Get JWT token from database or environment
  */
-function getAuthToken(): string {
-  const token = process.env.STOCKBIT_JWT_TOKEN;
-  if (!token) {
-    throw new Error('STOCKBIT_JWT_TOKEN not found in environment variables');
+async function getAuthToken(): Promise<string> {
+  const now = Date.now();
+
+  // Return cached token if still valid
+  if (cachedToken && (now - tokenLastFetched) < TOKEN_CACHE_DURATION) {
+    return cachedToken;
   }
+
+  // Fetch from database
+  const token = await getSessionValue('stockbit_token');
+
+  // Fallback to env if database token not found
+  if (!token) {
+    const envToken = process.env.STOCKBIT_JWT_TOKEN;
+    if (!envToken) {
+      throw new Error('STOCKBIT_JWT_TOKEN not found in database or environment');
+    }
+    return envToken;
+  }
+
+  // Update cache
+  cachedToken = token;
+  tokenLastFetched = now;
+
   return token;
 }
 
 /**
  * Common headers for Stockbit API
  */
-function getHeaders(): HeadersInit {
+async function getHeaders(): Promise<HeadersInit> {
   return {
     'accept': 'application/json',
-    'authorization': `Bearer ${getAuthToken()}`,
+    'authorization': `Bearer ${await getAuthToken()}`,
     'origin': 'https://stockbit.com',
     'referer': 'https://stockbit.com/',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
@@ -45,7 +70,7 @@ export async function fetchMarketDetector(
 
   const response = await fetch(url.toString(), {
     method: 'GET',
-    headers: getHeaders(),
+    headers: await getHeaders(),
   });
 
   if (!response.ok) {
@@ -63,7 +88,7 @@ export async function fetchOrderbook(emiten: string): Promise<OrderbookResponse>
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: getHeaders(),
+    headers: await getHeaders(),
   });
 
   if (!response.ok) {
@@ -81,7 +106,7 @@ export async function fetchWatchlist(): Promise<WatchlistResponse> {
   const metaUrl = `${STOCKBIT_BASE_URL}/watchlist?page=1&limit=500`;
   const metaResponse = await fetch(metaUrl, {
     method: 'GET',
-    headers: getHeaders(),
+    headers: await getHeaders(),
   });
 
   if (!metaResponse.ok) {
@@ -102,7 +127,7 @@ export async function fetchWatchlist(): Promise<WatchlistResponse> {
   const detailUrl = `${STOCKBIT_BASE_URL}/watchlist/${watchlistId}?page=1&limit=500`;
   const detailResponse = await fetch(detailUrl, {
     method: 'GET',
-    headers: getHeaders(),
+    headers: await getHeaders(),
   });
 
   if (!detailResponse.ok) {
