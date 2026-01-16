@@ -239,6 +239,7 @@ export interface AgentStoryResult {
   matriks_story?: MatriksStoryItem[];
   swot_analysis?: SwotAnalysis;
   checklist_katalis?: ChecklistKatalis[];
+  keystat_signal?: string;
   strategi_trading?: StrategiTrading;
   kesimpulan?: string;
   error_message?: string;

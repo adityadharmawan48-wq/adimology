@@ -6,6 +6,7 @@ import CompactResultCard from './CompactResultCard';
 import BrokerSummaryCard from './BrokerSummaryCard';
 import KeyStatsCard from './KeyStatsCard';
 import AgentStoryCard from './AgentStoryCard';
+import PriceGraph from './PriceGraph';
 import html2canvas from 'html2canvas';
 import type { StockInput, StockAnalysisResult, KeyStatsData, AgentStoryResult } from '@/lib/types';
 import { getDefaultDate } from '@/lib/utils';
@@ -187,7 +188,10 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
       const response = await fetch('/api/analyze-story', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emiten })
+        body: JSON.stringify({ 
+          emiten, 
+          keyStats: keyStats // Pass the current keyStats data
+        })
       });
       
       const data = await response.json();
@@ -453,6 +457,11 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
                 keyStats={keyStats}
               />
             )}
+
+            {/* Price Graph Section - Full Width */}
+            <div style={{ gridColumn: '1 / -1', width: '100%', marginTop: '1rem' }}>
+              <PriceGraph ticker={result.input.emiten} />
+            </div>
 
             {/* Agent Story Section - Full Width */}
             <div style={{ gridColumn: '1 / -1', marginTop: '0', width: '100%' }}>

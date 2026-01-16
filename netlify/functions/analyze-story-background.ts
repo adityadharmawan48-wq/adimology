@@ -16,6 +16,14 @@ export default async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Missing emiten or id' }), { status: 400 });
     }
 
+    let keyStatsData = null;
+    try {
+      const body = await req.json();
+      keyStatsData = body.keyStats;
+    } catch (e) {
+      console.log('[Agent Story] No JSON body found or invalid JSON');
+    }
+
     if (!GEMINI_API_KEY) {
       await updateAgentStory(parseInt(storyId), {
         status: 'error',
@@ -42,14 +50,21 @@ export default async (req: Request) => {
     const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const model = 'gemini-3-flash-preview';
     const systemPrompt = "Kamu adalah seorang analis saham profesional Indonesia yang ahli dalam menganalisa story dan katalis pergerakan harga saham.";
+    
+    let keyStatsContext = '';
+    if (keyStatsData) {
+      keyStatsContext = `\nDATA KEY STATISTICS UNTUK ${emiten}:\n` + JSON.stringify(keyStatsData, null, 2) + '\n';
+    }
+
     const userPrompt = `Hari ini adalah ${today}.
 Cari dan analisa berita-berita TERBARU (bulan ini/minggu ini) tentang emiten saham Indonesia dengan kode ${emiten} dari internet menggunakan Google Search. 
-
+${keyStatsContext}
 FOKUS ANALISA:
 1. Fokus sepenuhnya pada STORY BISNIS, AKSI KORPORASI, dan KATALIS fundamental/sentimen.
 2. ABAIKAN data harga saham (price action) karena data harga dari internet seringkali tidak akurat atau delay. Jangan menyebutkan angka harga saham spesifik dalam analisis.
-3. Hubungkan berita yang ditemukan dengan logika pasar: mengapa berita ini bagus/buruk untuk masa depan perusahaan?
-4. Sebutkan tanggal rilis berita yang kamu gunakan sebagai referensi di dalam deskripsi katalis. 
+3. Hubungkan berita yang ditemukan dengan logika pasar: mengapa berita ini bagus atau buruk untuk masa depan perusahaan?
+4. Sebutkan tanggal rilis berita yang kamu gunakan sebagai referensi di dalam deskripsi katalis.
+5. Terjemahkan data Key Statistics (pahami data di atas jika tersedia) ke dalam bahasa yang mudah dipahami tapi detail untuk investasi. Berikan kesimpulan apakah data tersebut memberikan signal 'Positif/Sehat', 'Neutral', atau 'Negatif/Hati-hati' untuk investasi jangka pendek dan panjang.
 
 Berikan analisis dalam format JSON dengan struktur berikut (PASTIKAN HANYA OUTPUT JSON, tanpa markdown code block agar mudah di-parse):
 {
@@ -58,7 +73,7 @@ Berikan analisis dalam format JSON dengan struktur berikut (PASTIKAN HANYA OUTPU
       "kategori_story": "Transformasi Bisnis | Aksi Korporasi | Pemulihan Fundamental | Kondisi Makro",
       "deskripsi_katalis": "deskripsi singkat katalis",
       "logika_ekonomi_pasar": "penjelasan logika ekonomi/pasar",
-      "potensi_dampak_harga": "dampak terhadap harga saham"
+      "potensi_dampak_harga": "dampak terhadap harga saham negatif/netral/positif"
     }
   ],
   "swot_analysis": {
@@ -81,6 +96,7 @@ Berikan analisis dalam format JSON dengan struktur berikut (PASTIKAN HANYA OUTPU
       "stop_loss": "level stop loss"
     }
   },
+  "keystat_signal": "analisis data key statistics dalam bahasa awam dengan indikasi signal investasi",
   "kesimpulan": "kesimpulan analisis dalam 2-3 kalimat"
 }`;
 
@@ -142,6 +158,7 @@ Berikan analisis dalam format JSON dengan struktur berikut (PASTIKAN HANYA OUTPU
       matriks_story: analysisResult.matriks_story || [],
       swot_analysis: analysisResult.swot_analysis || {},
       checklist_katalis: analysisResult.checklist_katalis || [],
+      keystat_signal: analysisResult.keystat_signal || '',
       strategi_trading: analysisResult.strategi_trading || {},
       kesimpulan: analysisResult.kesimpulan || ''
     });

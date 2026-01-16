@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const emiten = body.emiten?.toUpperCase();
+    const keyStats = body.keyStats;
 
     if (!emiten) {
       return NextResponse.json({ error: 'Missing emiten parameter' }, { status: 400 });
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
     // Fire and forget - don't await
     fetch(`${functionUrl}/analyze-story-background?emiten=${emiten}&id=${story.id}`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyStats })
     }).catch(err => console.error('Failed to trigger background function:', err));
 
     return NextResponse.json({ 

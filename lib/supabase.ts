@@ -372,6 +372,7 @@ export async function updateAgentStory(id: number, data: {
   matriks_story?: object[];
   swot_analysis?: object;
   checklist_katalis?: object[];
+  keystat_signal?: string;
   strategi_trading?: object;
   kesimpulan?: string;
   error_message?: string;

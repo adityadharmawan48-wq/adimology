@@ -254,22 +254,44 @@ export default function AgentStoryCard({ stories, status, onRetry }: AgentStoryC
           }}>
             3. Checklist Katalis Jangka Pendek
           </h4>
-          <div style={{ fontSize: '0.875rem' }}>
+          <div style={{ 
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '0.75rem',
+            fontSize: '0.875rem' 
+          }}>
             {data.checklist_katalis.map((item: ChecklistKatalis, idx: number) => (
               <div key={idx} style={{ 
                 display: 'flex', 
-                gap: '0.5rem',
-                marginBottom: '0.5rem',
-                padding: '0.5rem',
+                gap: '0.75rem',
+                padding: '0.75rem',
                 background: 'rgba(255,255,255,0.03)',
-                borderRadius: '6px'
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.05)',
+                alignItems: 'flex-start'
               }}>
-                <span style={{ color: 'var(--text-muted)' }}>{idx + 1}.</span>
-                <div>
-                  <span style={{ fontWeight: 500 }}>{item.item}</span>
-                  <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)' }}>
-                    → {item.dampak_instan}
-                  </p>
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.1)',
+                  minWidth: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-secondary)',
+                  flexShrink: 0
+                }}>
+                  {idx + 1}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 500, marginBottom: '0.25rem' }}>
+                    {item.item}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.4' }}>
+                    <span style={{ color: 'var(--accent-primary)', marginRight: '4px' }}>→</span>
+                    {item.dampak_instan}
+                  </div>
                 </div>
               </div>
             ))}
@@ -291,30 +313,97 @@ export default function AgentStoryCard({ stories, status, onRetry }: AgentStoryC
           </h4>
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: '0.5rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+            gap: '0.75rem',
             fontSize: '0.875rem'
           }}>
-            <div style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Tipe Saham:</span>{' '}
-              <span style={{ fontWeight: 500 }}>{data.strategi_trading.tipe_saham}</span>
+            {/* Tipe Saham */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: 'rgba(255,255,255,0.03)', 
+              borderRadius: '8px', 
+              border: '1px solid rgba(255,255,255,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem'
+            }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tipe Saham</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{data.strategi_trading.tipe_saham}</span>
             </div>
-            <div style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Target Entry:</span>{' '}
-              <span style={{ fontWeight: 500 }}>{data.strategi_trading.target_entry}</span>
+
+            {/* Target Entry */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: 'rgba(255,255,255,0.03)', 
+              borderRadius: '8px', 
+              border: '1px solid rgba(255,255,255,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem'
+            }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Target Entry</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{data.strategi_trading.target_entry}</span>
             </div>
-            <div style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Take Profit:</span>{' '}
-              <span style={{ color: 'var(--accent-success)', fontWeight: 500 }}>
+
+            {/* Take Profit */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: 'rgba(0, 200, 150, 0.05)', 
+              borderRadius: '8px', 
+              border: '1px solid rgba(0, 200, 150, 0.15)',
+              borderLeft: '4px solid var(--accent-success)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem'
+            }}>
+              <span style={{ color: 'var(--accent-success)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Take Profit</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
                 {data.strategi_trading.exit_strategy?.take_profit}
               </span>
             </div>
-            <div style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Stop Loss:</span>{' '}
-              <span style={{ color: 'var(--accent-warning)', fontWeight: 500 }}>
+
+            {/* Stop Loss */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: 'rgba(245, 87, 108, 0.05)', 
+              borderRadius: '8px', 
+              border: '1px solid rgba(245, 87, 108, 0.15)',
+              borderLeft: '4px solid var(--accent-warning)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem'
+            }}>
+              <span style={{ color: 'var(--accent-warning)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stop Loss</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
                 {data.strategi_trading.exit_strategy?.stop_loss}
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 5: KeyStat Signal */}
+      {data.keystat_signal && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ 
+            fontSize: '1rem', 
+            color: 'var(--text-primary)',
+            marginBottom: '0.75rem',
+            fontWeight: 500,
+            opacity: 0.9
+          }}>
+            5. Fundamental Signal (Key Statistics)
+          </h4>
+          <div style={{ 
+            padding: '1rem',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            fontSize: '0.875rem',
+            lineHeight: 1.6,
+            color: 'var(--text-secondary)'
+          }}>
+            {data.keystat_signal}
           </div>
         </div>
       )}
