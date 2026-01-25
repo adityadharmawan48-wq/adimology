@@ -52,10 +52,10 @@ export async function POST(request: NextRequest) {
       ? 'http://localhost:8888' 
       : `https://${host}`;
 
-    
     const functionUrl = baseUrl.includes('/.netlify/functions') 
       ? baseUrl 
       : `${baseUrl.replace(/\/$/, '')}/.netlify/functions`;
+
 
     console.log(`[Agent Story] Triggering background function at: ${functionUrl}/analyze-story-background`);
 

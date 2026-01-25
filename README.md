@@ -36,20 +36,7 @@ Ikuti langkah-langkah berikut secara berurutan:
 
 1. Buat akun dan project baru di [Supabase](https://supabase.com/)
 2. Buka **SQL Editor** di dashboard Supabase
-3. Jalankan script SQL berikut **secara berurutan** (file ada di folder `supabase/`):
-
-   | Urutan | File | Fungsi |
-   |--------|------|--------|
-   | 1 | `session_table.sql` | Menyimpan token sesi Stockbit |
-   | 2 | `stock_queries_table.sql` | Tabel utama riwayat analisis |
-   | 3 | `agent_story_table.sql` | Tabel analisis AI (Gemini) |
-   | 4 | `background_job_logs.sql` | Log eksekusi background jobs |
-   | 5 | `add_emiten_flags.sql` | Tabel flags emiten (OK/NG/Neutral) |
-   | 6 | `stock_queries_migration.sql` | Migrasi struktur data analisis |
-   | 7 | `add_sector_column.sql` | Tambah kolom sektor emiten |
-   | 8 | `add_real_harga_column.sql` | Tambah kolom tracking harga H+1 |
-   | 9 | `add_keystat_signal.sql` | Tambah sinyal investasi di tabel AI |
-   | 10 | `add_token_expiry_tracking.sql` | Tracking validitas & expiry token |
+3. Jalankan script SQL yang ada di folder `supabase/` **secara berurutan berdasarkan nama filenya** (contoh: mulai dari `001_...` hingga `011_...`).
 
 4. Catat kredensial berikut dari **Project Settings > API**:
    - `Project URL` → untuk `NEXT_PUBLIC_SUPABASE_URL`
@@ -120,20 +107,7 @@ Ikuti langkah-langkah berikut secara berurutan:
 
 1. Buat akun dan project baru di [Supabase](https://supabase.com/)
 2. Buka **SQL Editor** di dashboard Supabase
-3. Jalankan script SQL berikut **secara berurutan** (file ada di folder `supabase/`):
-
-   | Urutan | File | Fungsi |
-   |--------|------|--------|
-   | 1 | `session_table.sql` | Menyimpan token sesi Stockbit |
-   | 2 | `stock_queries_table.sql` | Tabel utama riwayat analisis |
-   | 3 | `agent_story_table.sql` | Tabel analisis AI (Gemini) |
-   | 4 | `background_job_logs.sql` | Log eksekusi background jobs |
-   | 5 | `add_emiten_flags.sql` | Tabel flags emiten (OK/NG/Neutral) |
-   | 6 | `stock_queries_migration.sql` | Migrasi struktur data analisis |
-   | 7 | `add_sector_column.sql` | Tambah kolom sektor emiten |
-   | 8 | `add_real_harga_column.sql` | Tambah kolom tracking harga H+1 |
-   | 9 | `add_keystat_signal.sql` | Tambah sinyal investasi di tabel AI |
-   | 10 | `add_token_expiry_tracking.sql` | Tracking validitas & expiry token |
+3. Jalankan script SQL yang ada di folder `supabase/` **secara berurutan berdasarkan nama filenya** (contoh: mulai dari `001_...` hingga `011_...`).
 
 4. Catat kredensial berikut dari **Project Settings > API**:
    - `Project URL` → untuk `NEXT_PUBLIC_SUPABASE_URL`
