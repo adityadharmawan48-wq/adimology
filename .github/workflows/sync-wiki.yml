@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'docs/WIKI_DEPLOY_CLOUD.md'
-  workflow_dispatch: # Memungkinkan menjalankan manual untuk testing
+      - 'docs/**'
+  workflow_dispatch:
 
 jobs:
   sync-wiki:
@@ -19,36 +19,32 @@ jobs:
 
       - name: Push to Wiki
         run: |
-          # 1. Konfigurasi Git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 2. Clone Wiki Repo
-          # GitHub Wiki repo URL: https://github.com/USER/REPO.wiki.git
           WIKI_REPO="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
           
           mkdir temp_wiki
           cd temp_wiki
           
-          # Cek apakah wiki sudah ada/diinisialisasi
           if git clone $WIKI_REPO .; then
-            echo "Wiki repo cloned successfully."
+            echo "Wiki repo cloned."
           else
-            echo "ERROR: Wiki repo tidak ditemukan atau belum diinisialisasi."
-            echo "PASTIKAN Anda sudah membuat minimal 1 halaman (klik Create Page) di tab Wiki GitHub manual!"
+            echo "Wiki repo not found."
             exit 1
           fi
           
-          # 3. Salin file dari docs/ ke root wiki
-          # Kita gunakan -f untuk override jika sudah ada
+          # Salin semua file dari docs/ ke wiki
+          # Kita juga merename file agar URL di wiki lebih bagus
           cp ../docs/WIKI_DEPLOY_CLOUD.md ./Deploy-Cloud.md
+          cp ../docs/CHECKPOINT.md ./Checkpoint.md
           
-          # 4. Commit dan Push
           git add .
           if git diff --staged --quiet; then
-            echo "Tidak ada perubahan untuk diupdate ke wiki."
+            echo "No changes."
           else
-            git commit -m "Sync wiki from docs/WIKI_DEPLOY_CLOUD.md via GitHub Actions"
+            git commit -m "Sync wiki from docs/ via GitHub Actions"
             git push origin master || git push origin main
           fi
+
 

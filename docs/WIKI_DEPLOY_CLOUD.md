@@ -47,12 +47,14 @@ Agar migrasi otomatis dapat berjalan, Anda perlu menyiapkan infrastruktur pelaca
 ## A3. Setup Chrome Extension (untuk Cloud)
 
 1. **Download File ke Komputer**: Jika Anda belum memiliki file ini di komputer, buka repository GitHub Anda, klik tombol **Code** (warna hijau), lalu pilih **Download ZIP**. Ekstrak (Extract) file tersebut ke folder pilihan Anda (misal di Desktop atau Documents).
+![Supabase Setup](https://raw.githubusercontent.com/bhaktiutama/adimology/main/public/chrome-extension01.png)
 2. Buka folder `stockbit-token-extension/` yang ada di dalam folder hasil ekstrak tadi.
 3. Buat duplikat (Copy & Paste) untuk dua file berikut:
    - Duplikat `manifest.json.example` lalu ubah namanya menjadi `manifest.json`
    - Duplikat `background.js.example` lalu ubah namanya menjadi `background.js`
+![Supabase Setup](https://raw.githubusercontent.com/bhaktiutama/adimology/main/public/chrome-extension02.png)
 
-4. Edit `manifest.json` - ganti `YOUR_APP_DOMAIN` dengan URL Netlify Anda:
+4. Edit `manifest.json` - ganti `YOUR_APP_DOMAIN` dengan URL Netlify Anda dari langkah A2 no 8:
    ```json
    "host_permissions": [
       "https://*.stockbit.com/*",
@@ -70,6 +72,7 @@ Agar migrasi otomatis dapat berjalan, Anda perlu menyiapkan infrastruktur pelaca
    - Aktifkan **Developer mode** (pojok kanan atas)
    - Klik **Load unpacked**
    - Pilih folder `stockbit-token-extension`
+![Supabase Setup](https://raw.githubusercontent.com/bhaktiutama/adimology/main/public/chrome-extension03.png)
 
 ## A4. Verifikasi Instalasi
 
