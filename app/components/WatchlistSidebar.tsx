@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import type { WatchlistItem, WatchlistGroup } from '@/lib/types';
-import { CheckCircle2, XCircle, MinusCircle, Search, Filter, X } from 'lucide-react';
+import { CheckCircle2, XCircle, MinusCircle, Search, Filter, X, RefreshCw } from 'lucide-react';
 
 interface WatchlistSidebarProps {
   onSelect?: (symbol: string) => void;
@@ -15,6 +15,8 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshSeed, setRefreshSeed] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [syncedAt, setSyncedAt] = useState<string | null>(null);
 
   // Filter States
   const [filterEmiten, setFilterEmiten] = useState('');
@@ -24,11 +26,12 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
 
   // Fetch groups and watchlist items
   useEffect(() => {
-    const fetchGroups = async () => {
+    const fetchGroups = async (forceSync = false) => {
       if (groups.length === 0) setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/watchlist/groups');
+        const syncParam = forceSync ? '?sync=true' : '';
+        const res = await fetch(`/api/watchlist/groups${syncParam}`);
         const json = await res.json();
         
         if (!json.success) {
@@ -37,6 +40,10 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
             setError(json.error);
           }
           return;
+        }
+
+        if (json.synced_at) {
+          setSyncedAt(json.synced_at);
         }
 
         if (Array.isArray(json.data) && json.data.length > 0) {
@@ -65,15 +72,20 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
   useEffect(() => {
     if (!selectedGroupId) return;
 
-    const fetchWatchlist = async () => {
+    const fetchWatchlistItems = async (forceSync = false) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/watchlist?groupId=${selectedGroupId}`);
+        const syncParam = forceSync ? '&sync=true' : '';
+        const response = await fetch(`/api/watchlist?groupId=${selectedGroupId}${syncParam}`);
         const json = await response.json();
 
         if (!json.success) {
           throw new Error(json.error || 'Failed to fetch watchlist');
+        }
+
+        if (json.synced_at) {
+          setSyncedAt(json.synced_at);
         }
 
         const payload = json.data;
@@ -87,19 +99,68 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
       }
     };
 
-    fetchWatchlist();
+    fetchWatchlistItems();
   }, [selectedGroupId, refreshSeed]);
 
   // Handle token refresh event
   useEffect(() => {
     const handleTokenRefresh = () => {
-      console.log('Token refreshed event received, triggering watchlist refresh');
-      setRefreshSeed(prev => prev + 1);
+      console.log('Token refreshed event received, triggering watchlist sync');
+      handleSync();
     };
 
     window.addEventListener('token-refreshed', handleTokenRefresh);
     return () => window.removeEventListener('token-refreshed', handleTokenRefresh);
-  }, []);
+  }, [selectedGroupId]);
+
+  // Sync from Stockbit
+  const handleSync = async () => {
+    window.dispatchEvent(new CustomEvent('stockbit-fetch-start'));
+    setSyncing(true);
+    setError(null);
+    try {
+      // Sync groups
+      const groupsRes = await fetch('/api/watchlist/groups?sync=true');
+      const groupsJson = await groupsRes.json();
+      
+      if (groupsJson.success && Array.isArray(groupsJson.data)) {
+        setGroups(groupsJson.data);
+        if (groupsJson.synced_at) setSyncedAt(groupsJson.synced_at);
+      }
+
+      // Sync items for current group
+      if (selectedGroupId) {
+        const itemsRes = await fetch(`/api/watchlist?groupId=${selectedGroupId}&sync=true`);
+        const itemsJson = await itemsRes.json();
+        
+        if (itemsJson.success) {
+          const payload = itemsJson.data;
+          const data = payload?.data?.result || payload?.data || [];
+          setWatchlist(Array.isArray(data) ? data : []);
+          if (itemsJson.synced_at) setSyncedAt(itemsJson.synced_at);
+        }
+      }
+    } catch (err) {
+      console.error('Error syncing watchlist:', err);
+      setError('Sync failed. Showing cached data.');
+    } finally {
+      setSyncing(false);
+      window.dispatchEvent(new CustomEvent('stockbit-fetch-end'));
+    }
+  };
+
+  // Format relative time for synced_at
+  const formatSyncedAt = (iso: string | null) => {
+    if (!iso) return null;
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'baru saja';
+    if (mins < 60) return `${mins} menit lalu`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    const days = Math.floor(hours / 24);
+    return `${days} hari lalu`;
+  };
 
   // Handle real-time flag updates from InputForm
   useEffect(() => {
@@ -231,6 +292,24 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button 
+              onClick={handleSync}
+              disabled={syncing}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: syncing ? 'var(--accent-primary)' : 'var(--text-muted)',
+                cursor: syncing ? 'not-allowed' : 'pointer',
+                padding: '4px',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'all 0.2s'
+              }}
+              title="Sync from Stockbit"
+            >
+              <RefreshCw size={14} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+            </button>
+            <button 
               onClick={() => setShowFilters(!showFilters)}
               style={{
                 background: showFilters ? 'rgba(102, 126, 234, 0.2)' : 'transparent',
@@ -258,6 +337,19 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
               </span>
           </div>
         </div>
+
+        {/* Synced at timestamp */}
+        {syncedAt && (
+          <div style={{
+            fontSize: '0.65rem',
+            color: 'var(--text-muted)',
+            marginBottom: '0.5rem',
+            textAlign: 'right',
+            opacity: 0.7
+          }}>
+            Synced {formatSyncedAt(syncedAt)}
+          </div>
+        )}
 
         {/* Group Selector */}
         {groups.length > 1 && (
@@ -387,10 +479,11 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
       </div>
 
       {/* Loading indicator when switching groups */}
-      {loading && (
+      {/* Syncing indicator moved to Navbar */}
+      {loading && !syncing && (
         <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '1rem' }}>
           <div className="spinner" style={{ width: '16px', height: '16px', margin: '0 auto 0.5rem' }}></div>
-          <div style={{ fontSize: '0.75rem' }}>Refreshing...</div>
+          <div style={{ fontSize: '0.75rem' }}>Loading...</div>
         </div>
       )}
 

@@ -90,7 +90,7 @@ export default function JobStatusIndicator() {
       >
         <div className={`token-dot ${statusClass}`} />
         <span style={{ 
-          color: isFailed ? '#ff4d4d' : isRunning ? 'var(--accent-warning)' : 'var(--accent-success)',
+          color: isFailed ? '#ff4d4d' : isRunning ? 'var(--accent-orange)' : 'var(--accent-success)',
           whiteSpace: 'nowrap'
         }}>
           {statusLabel}

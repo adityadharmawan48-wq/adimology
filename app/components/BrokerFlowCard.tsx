@@ -142,7 +142,17 @@ export default function BrokerFlowCard({ emiten }: BrokerFlowCardProps) {
     <div className="broker-flow-card">
       {/* Header */}
       <div className="broker-flow-header">
-        <span className="broker-flow-title">Broker Flow</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span className="broker-flow-title">Broker Flow</span>
+          <a 
+            href="https://tradersaham.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="broker-flow-source-link"
+          >
+            tradersaham.com
+          </a>
+        </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {/* Status Filters */}
           <div className="broker-flow-filters">

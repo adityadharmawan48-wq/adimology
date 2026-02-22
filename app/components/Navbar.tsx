@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import TokenStatusIndicator from './TokenStatusIndicator';
 import JobStatusIndicator from './JobStatusIndicator';
+import StockbitFetchingIndicator from './StockbitFetchingIndicator';
 import ThemeToggle from './ThemeToggle';
-import { Github, Menu, X } from 'lucide-react';
+import PasswordSettingModal from './PasswordSettingModal';
+import { Github, Menu, X, Shield } from 'lucide-react';
 
 const Navbar = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -97,9 +100,31 @@ const Navbar = () => {
             </a>
           </div>
           <div className="nav-status-group">
+            <StockbitFetchingIndicator />
             <JobStatusIndicator />
             <TokenStatusIndicator />
             <ThemeToggle />
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="theme-toggle-btn"
+              title="Password Protection"
+              style={{ 
+                background: 'var(--bg-card)', 
+                border: '1px solid var(--border-color)', 
+                color: 'var(--text-primary)', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                width: '38px',
+                height: '38px',
+                borderRadius: '12px', 
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(10px)',
+              }}
+            >
+              <Shield size={20} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
 
@@ -182,9 +207,30 @@ const Navbar = () => {
               <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Theme</span>
               <ThemeToggle />
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Password</span>
+              <button
+                onClick={() => { setIsPasswordModalOpen(true); setIsMenuOpen(false); }}
+                style={{ 
+                  background: 'var(--bg-card)', 
+                  border: '1px solid var(--border-color)', 
+                  color: 'var(--text-primary)', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '10px'
+                }}
+              >
+                <Shield size={18} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
+      <PasswordSettingModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
     </nav>
   );
 };

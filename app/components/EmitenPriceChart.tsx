@@ -70,12 +70,14 @@ export default function EmitenPriceChart({ data, headerHeight, rowHeight }: Emit
           {/* Target R1 Dotted Line markers - Use semi-transparent stroke */}
           <Scatter dataKey="target_realistis" shape={(props: any) => {
             const { cx, cy } = props;
+            if (cx === undefined || cy === undefined || isNaN(cx) || isNaN(cy)) return <g />;
             return <rect x={cx - 1} y={cy - (rowHeight/3)} width={2} height={rowHeight * 0.6} fill="var(--accent-success)" opacity={0.3} />;
           }} />
 
           {/* Target Max Dotted Line markers */}
           <Scatter dataKey="target_max" shape={(props: any) => {
             const { cx, cy } = props;
+            if (cx === undefined || cy === undefined || isNaN(cx) || isNaN(cy)) return <g />;
             return <rect x={cx - 1} y={cy - (rowHeight/3)} width={2} height={rowHeight * 0.6} fill="var(--accent-warning)" opacity={0.3} />;
           }} />
 

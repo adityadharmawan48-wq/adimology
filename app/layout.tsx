@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import Navbar from "./components/Navbar";
+import PasswordGate from "./components/PasswordGate";
 
 export default function RootLayout({
   children,
@@ -34,8 +35,10 @@ export default function RootLayout({
       <body
         className={`antialiased`}
       >
-        <Navbar />
-        {children}
+        <PasswordGate>
+          <Navbar />
+          {children}
+        </PasswordGate>
       </body>
     </html>
   );

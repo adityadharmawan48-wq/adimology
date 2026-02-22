@@ -106,15 +106,15 @@ const drawPerformanceChart = (doc: any, cell: any, record: any) => {
 };
 
 const getTableColumn = () => [
-  'Date', 
-  'Emiten', 
-  'Harga', 
-  'Target R1', 
-  'Target Max', 
+  'Date',
+  'Emiten',
+  'Harga',
+  'Target R1',
+  'Target Max',
   'Max Harga',
   'Close Harga',
-  'Bandar', 
-  'Vol Bandar', 
+  'Bandar',
+  'Vol Bandar',
   'Avg Bandar',
   'Performance'
 ];
@@ -124,7 +124,7 @@ const getTableRows = (data: AnalysisRecord[]) => data.map(record => {
   const maxGain = calculateGain(record.harga, record.target_max);
   const maxHargaGain = calculateGain(record.harga, record.max_harga);
   const closeHargaGain = calculateGain(record.harga, record.real_harga);
-  
+
   let avgGain = '';
   if (record.rata_rata_bandar && record.harga) {
     avgGain = calculateGain(record.rata_rata_bandar, record.harga);
@@ -180,7 +180,7 @@ const getAutoTableConfig = (doc: any, data: AnalysisRecord[]) => ({
       if ([3, 4, 5, 6, 9].includes(data.column.index)) {
         if (Array.isArray(data.cell.text) && data.cell.text.length > 1) {
           (data.cell as any)._fullText = [...data.cell.text];
-          data.cell.text = []; 
+          data.cell.text = [];
         }
       }
     }
@@ -194,7 +194,7 @@ const getAutoTableConfig = (doc: any, data: AnalysisRecord[]) => ({
         if (Array.isArray(fullText) && fullText.length > 1) {
           const primaryText = fullText[0];
           const percentageText = fullText[1];
-          
+
           const padding = 2;
           const x = cellData.cell.x + cellData.cell.width - padding;
           const centerY = cellData.cell.y + (cellData.cell.height / 2);
@@ -303,7 +303,7 @@ export const exportHistoryToPDF = (data: AnalysisRecord[], filters: any) => {
 };
 
 export const exportHistoryByEmitenToPDF = async (
-  data: AnalysisRecord[], 
+  data: AnalysisRecord[],
   filters: any,
   recordsPerEmiten: number = 10
 ) => {
@@ -326,13 +326,13 @@ export const exportHistoryByEmitenToPDF = async (
   if (filters.toDate) fetchParams.append('toDate', filters.toDate);
   if (filters.status !== 'all') fetchParams.append('status', filters.status);
   fetchParams.append('limit', '5000'); // Fetch enough to cover all unique emitens
-  
+
   const initialRes = await fetch(`/api/watchlist-history?${fetchParams}`);
   const initialJson = await initialRes.json();
   const allRecords = (initialJson.data || []) as AnalysisRecord[];
   const uniqueEmitens = Array.from(new Set(allRecords.map(r => r.emiten))).sort();
   const groupedData: { [emiten: string]: AnalysisRecord[] } = {};
-  
+
   await Promise.all(uniqueEmitens.map(async (emiten) => {
     try {
       const params = new URLSearchParams({
@@ -349,7 +349,7 @@ export const exportHistoryByEmitenToPDF = async (
       const response = await fetch(`/api/watchlist-history?${params}`);
       const json = await response.json();
       if (json.success) {
-        groupedData[emiten] = (json.data || []).reverse(); 
+        groupedData[emiten] = (json.data || []).reverse();
       }
     } catch (e) {
       console.error(`Failed to fetch history for ${emiten}`, e);
@@ -363,7 +363,7 @@ export const exportHistoryByEmitenToPDF = async (
   emitens.forEach((emiten) => {
     const emitenData = groupedData[emiten];
     if (emitenData.length === 0) return;
-    
+
     if (!isFirstPage) {
       doc.addPage();
     }

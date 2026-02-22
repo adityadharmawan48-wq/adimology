@@ -79,15 +79,15 @@ export default function EmitenSummaryCard() {
     if (!bandarObj) return <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>;
     const info = getBrokerInfo(bandarObj.name);
     const typeLabel = info.type === 'Smartmoney' ? 'Smart Money' : info.type;
-    
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>{bandarObj.name}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: 700, opacity: 0.9 }}>({bandarObj.count})</span>
         </div>
-        <div style={{ 
-          fontSize: '0.65rem', 
+        <div style={{
+          fontSize: '0.65rem',
           color: 'var(--text-primary)',
           background: 'rgba(255, 255, 255, 0.1)',
           padding: '1px 6px',
@@ -128,8 +128,8 @@ export default function EmitenSummaryCard() {
         </div>
       </div>
 
-      <div style={{ 
-        border: '1px solid var(--border-color)', 
+      <div style={{
+        border: '1px solid var(--border-color)',
         borderRadius: '12px',
         overflow: 'hidden',
         background: 'var(--bg-card)'
@@ -163,13 +163,13 @@ export default function EmitenSummaryCard() {
                   }}
                 >
                   <td style={{ padding: '0 1rem' }}>
-                    <a 
+                    <a
                       href={`/?symbol=${record.emiten}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ 
-                        fontWeight: 700, 
-                        color: 'var(--accent-primary)', 
+                      style={{
+                        fontWeight: 700,
+                        color: 'var(--accent-primary)',
                         fontSize: '0.9rem',
                         textDecoration: 'none',
                         cursor: 'pointer',
@@ -199,7 +199,7 @@ export default function EmitenSummaryCard() {
                     {formatPercent(record.hitRateMax)}
                   </td>
                   <td style={{ padding: '0 1rem', textAlign: 'right' }}>
-                    <div style={{ 
+                    <div style={{
                       fontSize: '0.85rem',
                       fontWeight: 700,
                       color: 'var(--text-primary)'
@@ -207,23 +207,23 @@ export default function EmitenSummaryCard() {
                       {formatPercent(record.totalHitRate)}
                     </div>
                   </td>
-                  <td style={{ 
-                    padding: '0 1rem', 
-                    textAlign: 'center', 
+                  <td style={{
+                    padding: '0 1rem',
+                    textAlign: 'center',
                     borderLeft: '1px solid var(--border-color)',
                     background: record.topBandars[0] ? getBrokerColor(record.topBandars[0].name) : 'transparent'
                   }}>
                     {renderBandarCell(record.topBandars[0])}
                   </td>
-                  <td style={{ 
-                    padding: '0 1rem', 
+                  <td style={{
+                    padding: '0 1rem',
                     textAlign: 'center',
                     background: record.topBandars[1] ? getBrokerColor(record.topBandars[1].name) : 'transparent'
                   }}>
                     {renderBandarCell(record.topBandars[1])}
                   </td>
-                  <td style={{ 
-                    padding: '0 1rem', 
+                  <td style={{
+                    padding: '0 1rem',
                     textAlign: 'center',
                     background: record.topBandars[2] ? getBrokerColor(record.topBandars[2].name) : 'transparent'
                   }}>

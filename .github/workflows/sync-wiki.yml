@@ -1,0 +1,53 @@
+name: Sync Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Source Repo
+        uses: actions/checkout@v4
+
+      - name: Push to Wiki
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          WIKI_REPO="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
+          
+          mkdir temp_wiki
+          cd temp_wiki
+          
+          if git clone $WIKI_REPO .; then
+            echo "Wiki repo cloned."
+          else
+            echo "Wiki repo not found."
+            exit 1
+          fi
+          
+          # Salin semua file dari docs/ ke wiki
+          # Kita juga merename file agar URL di wiki lebih bagus
+          cp ../docs/Home.md ./Home.md
+          cp ../docs/WIKI_DEPLOY_CLOUD.md ./Deploy-Cloud.md
+          cp ../docs/WIKI_DEPLOY_LOCAL.md ./Deploy-Local.md
+          cp ../docs/CHECKPOINT.md ./Checkpoint.md
+          cp ../docs/WIKI_RESET_PASSWORD.md ./Reset-Password.md
+          
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Sync wiki from docs/ via GitHub Actions"
+            git push origin master || git push origin main
+          fi
+
+

@@ -18,7 +18,7 @@ let tokenLastFetched: number = 0;
 const TOKEN_CACHE_DURATION = 60000; // 1 minute
 
 // Cache sector data to reduce API calls
-const sectorCache = new Map<string, { sector: string; timestamp: number }>();
+const sectorCache = new Map<string, { sector: string; name?: string; price?: string; timestamp: number }>();
 const SECTOR_CACHE_DURATION = 3600000; // 1 hour
 
 // Cache for sectors list
@@ -148,8 +148,8 @@ export async function fetchEmitenInfo(emiten: string): Promise<EmitenInfoRespons
         sector: cached.sector,
         sub_sector: '',
         symbol: emiten,
-        name: '',
-        price: '0',
+        name: cached.name || '',
+        price: cached.price || '0',
         change: '0',
         percentage: 0,
       },
@@ -172,6 +172,8 @@ export async function fetchEmitenInfo(emiten: string): Promise<EmitenInfoRespons
   if (data.data?.sector) {
     sectorCache.set(emiten.toUpperCase(), {
       sector: data.data.sector,
+      name: data.data.name,
+      price: data.data.price,
       timestamp: now,
     });
   }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchWatchlist, fetchMarketDetector, fetchOrderbook, getTopBroker, fetchEmitenInfo, fetchHistoricalSummary } from '@/lib/stockbit';
 import { calculateTargets } from '@/lib/calculations';
-import { saveWatchlistAnalysis, updatePreviousDayRealPrice } from '@/lib/supabase';
+import { saveWatchlistAnalysis, updatePreviousDayRealPrice, getCachedWatchlistItems, getCachedWatchlistGroups } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,9 +19,23 @@ export async function POST(request: NextRequest) {
     // Get current date for analysis
     const today = new Date().toISOString().split('T')[0];
 
-    // Fetch watchlist
-    const watchlistResponse = await fetchWatchlist();
-    const watchlistItems = watchlistResponse.data?.result || [];
+    // Try to fetch watchlist from local cache first
+    let watchlistItems: any[] = [];
+    
+    // Get the default group from cache
+    const cachedGroups = await getCachedWatchlistGroups();
+    if (cachedGroups.groups.length > 0) {
+      const defaultGroup = cachedGroups.groups.find(g => g.is_default) || cachedGroups.groups[0];
+      const cached = await getCachedWatchlistItems(defaultGroup.watchlist_id);
+      watchlistItems = cached.items;
+    }
+    
+    // Fallback to Stockbit API if cache is empty
+    if (watchlistItems.length === 0) {
+      const watchlistResponse = await fetchWatchlist();
+      watchlistItems = watchlistResponse.data?.result || [];
+    }
+
 
     if (watchlistItems.length === 0) {
       return NextResponse.json({

@@ -15,6 +15,28 @@ const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 
+// Load .env.local if it exists (for local development)
+const envPath = path.join(__dirname, '..', '.env.local');
+try {
+  const envContent = require('fs').readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^\s*([^#=]+?)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      let value = match[2].trim();
+      // Remove optional quotes
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.substring(1, value.length - 1);
+      }
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  });
+} catch (e) {
+  // .env.local might not exist, skip
+}
+
 // Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

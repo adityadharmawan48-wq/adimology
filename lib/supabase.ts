@@ -740,3 +740,235 @@ export async function getEmitenSummaryStats(limit: number = 5) {
   return stats.sort((a, b) => b.totalHitRate - a.totalHitRate);
 }
 
+// ===== Watchlist Cache Functions =====
+
+import type { WatchlistGroup } from './types';
+
+/**
+ * Check if there is any watchlist cache in the database
+ */
+export async function hasWatchlistCache(): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('watchlist_groups')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) return false;
+  return (count || 0) > 0;
+}
+
+/**
+ * Get cached watchlist groups from local database
+ */
+export async function getCachedWatchlistGroups(): Promise<{ groups: WatchlistGroup[]; synced_at: string | null }> {
+  const { data, error } = await supabase
+    .from('watchlist_groups')
+    .select('*')
+    .order('is_default', { ascending: false })
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching cached watchlist groups:', error);
+    return { groups: [], synced_at: null };
+  }
+
+  const groups: WatchlistGroup[] = (data || []).map((row: any) => ({
+    watchlist_id: row.watchlist_id,
+    name: row.name,
+    description: row.description || '',
+    is_default: row.is_default || false,
+    is_favorite: row.is_favorite || false,
+    emoji: row.emoji || '',
+    category_type: row.category_type || '',
+    total_items: row.total_items || 0,
+  }));
+
+  const synced_at = data?.[0]?.synced_at || null;
+
+  return { groups, synced_at };
+}
+
+/**
+ * Save watchlist groups from Stockbit to local database (upsert)
+ */
+export async function saveCachedWatchlistGroups(groups: WatchlistGroup[]): Promise<void> {
+  const now = new Date().toISOString();
+  const rows = groups.map(g => ({
+    watchlist_id: g.watchlist_id,
+    name: g.name,
+    description: g.description || '',
+    is_default: g.is_default || false,
+    is_favorite: g.is_favorite || false,
+    emoji: g.emoji || '',
+    category_type: g.category_type || '',
+    total_items: g.total_items || 0,
+    synced_at: now,
+  }));
+
+  const { error } = await supabase
+    .from('watchlist_groups')
+    .upsert(rows, { onConflict: 'watchlist_id' });
+
+  if (error) {
+    console.error('Error saving cached watchlist groups:', error);
+    throw error;
+  }
+
+  // Remove groups that no longer exist in Stockbit
+  const activeIds = groups.map(g => g.watchlist_id);
+  if (activeIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('watchlist_groups')
+      .delete()
+      .not('watchlist_id', 'in', `(${activeIds.join(',')})`);
+
+    if (deleteError) {
+      console.error('Error cleaning up old watchlist groups:', deleteError);
+    }
+  }
+}
+
+/**
+ * Get cached watchlist items for a specific group
+ */
+export async function getCachedWatchlistItems(watchlistId: number): Promise<{ items: any[]; synced_at: string | null }> {
+  // First get the internal group id
+  const { data: group, error: groupError } = await supabase
+    .from('watchlist_groups')
+    .select('id, synced_at')
+    .eq('watchlist_id', watchlistId)
+    .single();
+
+  if (groupError || !group) {
+    return { items: [], synced_at: null };
+  }
+
+  const { data, error } = await supabase
+    .from('watchlist_items')
+    .select(`
+      stockbit_item_id,
+      company_id,
+      symbol,
+      emiten_cache (
+        name,
+        sector,
+        last_price,
+        percent
+      )
+    `)
+    .eq('watchlist_group_id', group.id)
+    .order('symbol', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching cached watchlist items:', error);
+    return { items: [], synced_at: null };
+  }
+
+  // Map back to WatchlistItem-like format
+  const items = (data || []).map((row: any) => ({
+    id: row.stockbit_item_id,
+    company_id: row.company_id,
+    symbol: row.symbol,
+    company_code: row.symbol, // For compatibility
+    company_name: row.emiten_cache?.name || '',
+    sector: row.emiten_cache?.sector || undefined,
+    last_price: row.emiten_cache?.last_price !== null && row.emiten_cache?.last_price !== undefined 
+      ? Number(row.emiten_cache.last_price) 
+      : 0,
+    percent: row.emiten_cache?.percent || '0',
+  }));
+
+  return { items, synced_at: group.synced_at };
+}
+
+/**
+ * Save watchlist items for a specific group (full replace)
+ */
+export async function saveCachedWatchlistItems(
+  watchlistId: number,
+  items: any[]
+): Promise<void> {
+  // Get or create group record
+  const { data: group, error: groupError } = await supabase
+    .from('watchlist_groups')
+    .select('id')
+    .eq('watchlist_id', watchlistId)
+    .single();
+
+  if (groupError || !group) {
+    console.error('Group not found for watchlist_id:', watchlistId);
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  // Insert/Update emiten data first
+  if (items.length > 0) {
+    const symbolsData = items.map((item: any) => ({
+      symbol: (item.symbol || item.company_code || '').toUpperCase(),
+      name: item.company_name || '',
+      sector: item.sector || null,
+      last_price: item.last_price ?? item.price ?? null,
+      percent: item.percent || String(item.change_percentage || '0'),
+      synced_at: now
+    }));
+
+    // Upsert into emiten_cache
+    const { error: emitenError } = await supabase
+      .from('emiten_cache')
+      .upsert(symbolsData, { onConflict: 'symbol' });
+
+    if (emitenError) {
+      console.error('Error upserting emiten_cache:', emitenError);
+      throw emitenError;
+    }
+
+    // Associate with group
+    const watchlistRows = items.map((item: any) => ({
+      watchlist_group_id: group.id,
+      stockbit_item_id: String(item.id || ''),
+      company_id: item.company_id || null,
+      symbol: (item.symbol || item.company_code || '').toUpperCase(),
+    }));
+
+    // Reset items for this group and insert new associations
+    await supabase.from('watchlist_items').delete().eq('watchlist_group_id', group.id);
+
+    const { error: itemsError } = await supabase
+      .from('watchlist_items')
+      .insert(watchlistRows);
+
+    if (itemsError) {
+      console.error('Error saving cached watchlist items:', itemsError);
+      throw itemsError;
+    }
+  }
+
+  // Update group synced_at
+  await supabase
+    .from('watchlist_groups')
+    .update({ synced_at: now })
+    .eq('id', group.id);
+}
+
+/**
+ * Delete a cached watchlist item by symbol from a group
+ */
+export async function deleteCachedWatchlistItem(watchlistId: number, symbol: string): Promise<void> {
+  const { data: group } = await supabase
+    .from('watchlist_groups')
+    .select('id')
+    .eq('watchlist_id', watchlistId)
+    .single();
+
+  if (!group) return;
+
+  const { error } = await supabase
+    .from('watchlist_items')
+    .delete()
+    .eq('watchlist_group_id', group.id)
+    .eq('symbol', symbol.toUpperCase());
+
+  if (error) {
+    console.error('Error deleting cached watchlist item:', error);
+  }
+}

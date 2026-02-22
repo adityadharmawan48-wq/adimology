@@ -98,6 +98,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
   }, [selectedStock]);
 
   const handleSubmit = async (data: StockInput) => {
+    window.dispatchEvent(new CustomEvent('stockbit-fetch-start'));
     setLoading(true);
     setError(null);
     setResult(null);
@@ -158,6 +159,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      window.dispatchEvent(new CustomEvent('stockbit-fetch-end'));
     }
   };
 
@@ -232,6 +234,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
   const handleAnalyzeStory = async () => {
     if (!result) return;
 
+    window.dispatchEvent(new CustomEvent('stockbit-fetch-start'));
     const emiten = result.input.emiten.toUpperCase();
     setStoryStatus('pending');
 
@@ -255,6 +258,8 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
     } catch (err) {
       console.error('Failed to start analysis:', err);
       setStoryStatus('error');
+    } finally {
+      window.dispatchEvent(new CustomEvent('stockbit-fetch-end'));
     }
   };
 
@@ -338,12 +343,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
         hasResult={!!result}
       />
 
-      {loading && (
-        <div className="text-center mt-4">
-          <div className="spinner" style={{ margin: '0 auto' }}></div>
-          <p className="text-secondary mt-2">Fetching data from Stockbit...</p>
-        </div>
-      )}
+      {/* Fetching indicator moved to Navbar */}
 
       {error && (
         <div className="glass-card mt-4" style={{

@@ -82,8 +82,8 @@ export default function TokenStatusIndicator() {
         onClick={() => setShowDetails(!showDetails)}
       >
         <div className={`token-dot ${isError ? 'error' : isWarning ? 'warning' : 'good'}`} />
-        <span style={{ color: isError ? '#ff4d4d' : isWarning ? 'var(--accent-warning)' : 'var(--accent-success)' }}>
-          {isError ? 'Token Invalid' : isWarning ? 'Token Expiring' : 'Stockbit Connected'}
+        <span style={{ color: isError ? '#ff4d4d' : isWarning ? 'var(--accent-orange)' : 'var(--accent-success)' }}>
+          {isError ? 'Token Invalid' : isWarning ? 'Token Expiring' : 'Connected'}
         </span>
       </div>
 
