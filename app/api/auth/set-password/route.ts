@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { setProfileSetting } from '@/lib/supabase';
+import { clearSession } from '@/lib/auth';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -30,7 +31,9 @@ export async function POST(request: NextRequest) {
       await setProfileSetting('password_enabled', 'false');
     }
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    await clearSession(response);
+    return response;
   } catch (error) {
     console.error('Error setting password:', error);
     return NextResponse.json(

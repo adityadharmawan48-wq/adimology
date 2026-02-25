@@ -179,7 +179,7 @@ export default function CompactResultCard({
       </div>
 
       {/* Actions Footer - Fixed at bottom */}
-      <div className="compact-footer" style={{ margin: 0, borderRadius: '0 0 20px 20px' }}>
+      <div className="compact-footer" data-html2canvas-ignore="true" style={{ margin: 0, borderRadius: '0 0 20px 20px' }}>
         <button 
           className={`compact-action-btn ${copiedText ? 'active' : ''}`}
           onClick={onCopyText}

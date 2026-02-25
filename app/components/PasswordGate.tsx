@@ -20,22 +20,18 @@ export default function PasswordGate({ children }: PasswordGateProps) {
 
   const checkPasswordStatus = async () => {
     try {
-      // Check sessionStorage first
-      if (sessionStorage.getItem('app_unlocked') === 'true') {
-        setStatus('unlocked');
-        return;
-      }
-
       const res = await fetch('/api/auth/check-password');
       const data = await res.json();
 
-      if (data.success && data.enabled && data.hasPassword) {
+      console.log('Password status:', { enabled: data.enabled, authenticated: data.isAuthenticated });
+      
+      if (data.success && data.enabled && !data.isAuthenticated) {
         setStatus('locked');
       } else {
         setStatus('unlocked');
       }
     } catch {
-      // If check fails, allow access
+      // If check fails, allow access to prevent locking out on network error
       setStatus('unlocked');
     }
   };
@@ -57,7 +53,6 @@ export default function PasswordGate({ children }: PasswordGateProps) {
       const data = await res.json();
 
       if (data.success && data.valid) {
-        sessionStorage.setItem('app_unlocked', 'true');
         setStatus('unlocked');
       } else {
         setError('Password salah. Coba lagi.');

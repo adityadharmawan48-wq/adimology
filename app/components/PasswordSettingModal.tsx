@@ -91,6 +91,8 @@ export default function PasswordSettingModal({ isOpen, onClose }: PasswordSettin
         setConfirmPassword('');
         // Clear session so gate re-checks
         sessionStorage.removeItem('app_unlocked');
+        // Force reload to trigger PasswordGate re-evaluation
+        window.location.reload();
       } else {
         setError(data.error || 'Gagal menyimpan.');
       }

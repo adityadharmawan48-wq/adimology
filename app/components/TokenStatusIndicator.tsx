@@ -14,6 +14,8 @@ type TokenStatusData = {
   hoursUntilExpiry?: number;
 };
 
+let inFlightFetch: Promise<any> | null = null;
+
 export default function TokenStatusIndicator() {
   const [status, setStatus] = useState<TokenStatusData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,40 +36,50 @@ export default function TokenStatusIndicator() {
 
   useEffect(() => {
     const fetchStatus = async () => {
-      try {
-        const res = await fetch('/api/token-status');
-        if (res.ok) {
-          const data: TokenStatusData = await res.json();
-
-          // Check for transition from invalid/none to valid
-          if (data.isValid && prevIsValidRef.current === false) {
-            console.log('Token became valid, dispatching refresh event');
-            window.dispatchEvent(new CustomEvent('token-refreshed'));
-          }
-
+      if (inFlightFetch) {
+        const data = await inFlightFetch;
+        if (data && data.isValid !== undefined) {
           prevIsValidRef.current = data.isValid;
           setStatus(data);
         }
-      } catch (error) {
-        console.error('Failed to fetch token status', error);
-      } finally {
-        setLoading(false);
+        return data;
       }
+
+      inFlightFetch = (async () => {
+        try {
+          const res = await fetch('/api/token-status');
+          if (res.ok) {
+            const data: TokenStatusData = await res.json();
+
+            // Check for transition from invalid/none to valid
+            if (data.isValid && prevIsValidRef.current === false) {
+              console.log('Token became valid, dispatching refresh event');
+              window.dispatchEvent(new CustomEvent('token-refreshed'));
+            }
+
+            prevIsValidRef.current = data.isValid;
+            setStatus(data);
+            return data;
+          }
+        } catch (error) {
+          console.error('Failed to fetch token status', error);
+          throw error;
+        } finally {
+          setLoading(false);
+          inFlightFetch = null;
+        }
+      })();
+
+      return inFlightFetch;
     };
 
     fetchStatus();
 
-    // Dynamic interval: poll faster if token is invalid
-    const getInterval = () => {
-      if (!status) return 30000;
-      const isError = !status.exists || !status.isValid || status.isExpired;
-      return isError ? 5000 : 30000; // 5s if error, 30s otherwise
-    };
-
-    const intervalId = setInterval(fetchStatus, getInterval());
+    // Fixed interval to prevent loops from status.isValid dependency
+    const intervalId = setInterval(fetchStatus, 30000); 
 
     return () => clearInterval(intervalId);
-  }, [status?.isValid]);
+  }, []);
 
   if (loading || !status) return null;
 

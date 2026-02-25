@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProfileSetting } from '@/lib/supabase';
+import { setSession } from '@/lib/auth';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -33,7 +34,13 @@ export async function POST(request: NextRequest) {
     const inputHash = await hashPassword(password);
     const valid = inputHash === storedHash;
 
-    return NextResponse.json({ success: true, valid });
+    if (valid) {
+      const response = NextResponse.json({ success: true, valid: true });
+      await setSession(response);
+      return response;
+    }
+
+    return NextResponse.json({ success: true, valid: false });
   } catch (error) {
     console.error('Error verifying password:', error);
     return NextResponse.json(

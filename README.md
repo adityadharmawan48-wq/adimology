@@ -16,6 +16,15 @@
 
 ## Changelog
 
+### v0.4.1 (2026-02-24)
+- **Security Hardening**: Implementasi global API protection menggunakan **Next.js 16 Proxy**.
+- **API Request Optimization**: Implementasi *request deduplication* pada indikator status dan pembatasan minimal 4 karakter pada input emiten untuk menghemat kuota request.
+
+### v0.4.0 (2026-02-23)
+- **High-Fidelity Copy Image**: Migrasi dari `html2canvas` ke `html-to-image` untuk hasil capture yang lebih tajam (HD) dan akurat.
+- **Transparent Corners**: Optimalisasi capture spesifik pada elemen card untuk menghasilkan pojok yang transparan (rounded).
+- **Clean Capture**: Penambahan fitur filter otomatis untuk menyembunyikan tombol aksi footer dari hasil gambar copy.
+
 ### v0.3.3 (2026-02-22)
 - **Password Protection**: Implementasi keamanan akses aplikasi dengan proteksi password.
 - **Session-based Unlocking**: Mekanisme akses satu kali per sesi.
@@ -77,7 +86,7 @@
 - **Backend/Database**: [Supabase](https://supabase.com/) (PostgreSQL).
 - **Deployment**: [Netlify](https://www.netlify.com/) (dengan Netlify Functions & Scheduled Functions).
 - **AI Engine**: [Google Gemini Pro](https://ai.google.dev/) dengan Google Search Grounding untuk data berita terkini.
-- **Tools**: `jspdf` & `html2canvas` untuk ekspor PDF, `lucide-react` untuk ikon.
+- **Tools**: `jspdf`, `html-to-image`, & `html2canvas` untuk ekspor PDF dan capture image, `lucide-react` untuk ikon.
 
 ---
 

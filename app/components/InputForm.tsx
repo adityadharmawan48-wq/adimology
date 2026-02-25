@@ -22,6 +22,8 @@ interface InputFormProps {
   hasResult?: boolean;
 }
 
+let inFlightFlagFetch: Record<string, Promise<any>> = {};
+
 export default function InputForm({
   onSubmit,
   loading,
@@ -49,19 +51,40 @@ export default function InputForm({
   // Fetch current flag when emiten changes
   useEffect(() => {
     const fetchFlag = async () => {
-      if (!emiten) {
+      // Standard IDX ticker is 4 characters
+      if (!emiten || emiten.length !== 4) {
         setCurrentFlag(null);
         return;
       }
-      try {
-        const res = await fetch(`/api/emiten/flag?emiten=${emiten}`);
-        const json = await res.json();
-        if (json.success) {
+
+      // Check if this specific emiten is already being fetched
+      const existingFetch = inFlightFlagFetch[emiten];
+      if (existingFetch) {
+        const json = await existingFetch;
+        if (json && json.success) {
           setCurrentFlag(json.flag);
         }
-      } catch (err) {
-        console.error('Error fetching flag:', err);
+        return;
       }
+
+      const fetchPromise = (async () => {
+        try {
+          const res = await fetch(`/api/emiten/flag?emiten=${emiten}`);
+          const json = await res.json();
+          if (json.success) {
+            setCurrentFlag(json.flag);
+          }
+          return json;
+        } catch (err) {
+          console.error('Error fetching flag:', err);
+          throw err;
+        } finally {
+          delete inFlightFlagFetch[emiten];
+        }
+      })();
+
+      inFlightFlagFetch[emiten] = fetchPromise;
+      await fetchPromise;
     };
     fetchFlag();
   }, [emiten]);

@@ -10,7 +10,7 @@ import PriceGraph from './PriceGraph';
 import BrokerFlowCard from './BrokerFlowCard';
 import EmitenHistoryCard from './EmitenHistoryCard';
 
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 import type { StockInput, StockAnalysisResult, KeyStatsData, AgentStoryResult } from '@/lib/types';
 import { getDefaultDate } from '@/lib/utils';
 
@@ -277,19 +277,33 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
   };
 
   const handleCopyImage = async () => {
-    const cardElement = document.getElementById('compact-result-card-container');
+    const container = document.getElementById('compact-result-card-container');
+    const cardElement = container?.querySelector('.compact-card') as HTMLElement;
     if (!cardElement) return;
 
     try {
-      const canvas = await html2canvas(cardElement, {
-        backgroundColor: null,
-        scale: 2,
+      // Use html-to-image for much better quality and glassmorphism support
+      const blob = await htmlToImage.toBlob(cardElement, {
+        pixelRatio: 2,
+        cacheBust: true,
+        // Remove backdrop-filter during capture to prevent the "gray layer" effect
+        // Use 'as any' to allow vendor prefixes in the style object
+        style: {
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+          background: 'var(--bg-secondary)',
+          borderRadius: '20px',
+        } as any,
+        filter: (node: any) => {
+          // Ignore the footer buttons and any element marked for ignore
+          const exclusionClasses = ['compact-footer'];
+          if (node.classList) {
+            return !exclusionClasses.some(cls => node.classList.contains(cls)) && 
+                   !node.hasAttribute?.('data-html2canvas-ignore');
+          }
+          return true;
+        }
       });
-
-      // Wrap toBlob in a Promise to keep the async chain active for Safari's strict user-gesture checks
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, 'image/png')
-      );
 
       if (!blob) throw new Error('Failed to generate image blob');
 
